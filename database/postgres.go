@@ -4,19 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"gitlab.bcc.kz/digital-banking-platform/microservices/currency-market/modules/framework.git/application"
+	"gitlab.bcc.kz/digital-banking-platform/microservices/currency-market/modules/framework.git/errors"
 	"gitlab.bcc.kz/digital-banking-platform/microservices/currency-market/modules/framework.git/logger"
 
 	_ "github.com/lib/pq"
 )
 
-type postgresCfg struct {
-	User     string
-	Password string
-	Host     string
-	Port     int
-	DBName   string
-	SslMode  string
-}
 type postgres struct {
 	db *sql.DB
 }
@@ -26,7 +19,7 @@ func NewPostgresConn(cfg application.Config, log logger.Logger) (DB, error) {
 
 	log.Info("database init...")
 
-	dbCfg := postgresCfg{}
+	dbCfg := config{}
 
 	cfg.StringVar(&dbCfg.DBName, "APP_PG_DBNAME", "postgres", "db name")
 	cfg.StringVar(&dbCfg.User, "APP_PG_LOGIN", "postgres", "db user")
@@ -39,12 +32,12 @@ func NewPostgresConn(cfg application.Config, log logger.Logger) (DB, error) {
 		dbCfg.User, dbCfg.Password, dbCfg.Host, dbCfg.Port, dbCfg.DBName, dbCfg.SslMode)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap("NewPostgresConn sql.Open", err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap("NewPostgresConn db.Ping", err)
 	}
 
 	log.Info("database connected")
